@@ -11,7 +11,7 @@ FROM ubuntu:22.04
 LABEL maintainer Xiangmin Jiao <xmjiao@gmail.com>
 
 ARG DOCKER_LANG=en_US
-ARG DOCKER_TIMEZONE=America/New_York
+ARG DOCKER_TIMEZONE=America/Los Angeles
 ARG X11VNC_VERSION=latest
 
 ENV LANG=$DOCKER_LANG.UTF-8 \
@@ -128,6 +128,54 @@ RUN apt-get update && \
     apt-get -y autoremove && \
     ldconfig && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Install custom applications to support GNURadio development
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        nano \
+        libboost-all-dev \ 
+        build-essential \ 
+        cmake \ 
+        python3-protobuf \ 
+        python3-matplotlib \ 
+        python3-pip \ 
+        python3-gi \ 
+        python3-uhd \ 
+        gobject-introspection \ 
+        gir1.2-gtk-3.0 \ 
+        protobuf-compiler \ 
+        gnuradio \ 
+        gnuradio-dev \ 
+        gqrx-sdr \ 
+        jupyter-notebook \ 
+        jupyter \ 
+        swig \ 
+        liborc-0.4-dev \ 
+        pkg-config \ 
+        clang-format \ 
+        doxygen \ 
+        libcppunit-dev \ 
+        liblog4cpp5-dev \ 
+        libspdlog-dev \ 
+        uhd-host
+RUN python3 -m pip install "numpy<2.0"
+# Install Visual Studio Code
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    wget gpg
+RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+RUN install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+RUN echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | tee /etc/apt/sources.list.d/vscode.list > /dev/null
+RUN rm -f packages.microsoft.gpg
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    apt-transport-https
+RUN apt update
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    code 
+# Clean repositories
+RUN apt -y autoremove && apt -y autoclean
 
 ########################################################
 # Customization for user and location
